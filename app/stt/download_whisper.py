@@ -1,3 +1,4 @@
+import os
 import pathlib
 
 import httpx
@@ -15,6 +16,8 @@ if not _WHISPER_PATH.exists():
     _WHISPER_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(_WHISPER_PATH, "wb") as f:
         f.write(response.content)
+    loguru.logger.info("Changing to executable permissions...")
+    os.chmod(_WHISPER_PATH, 0o755)
     loguru.logger.info(f"Model downloaded and saved to {_WHISPER_PATH}")
 
 
