@@ -20,8 +20,8 @@ class TranscriptLine:
         # Extract the time and text from the line
         start_time, end_time, text = matches[0]
         return cls(
-            start_time=int(start_time.replace(".", ",")),
-            end_time=int(end_time.replace(".", ",")),
+            start_time=start_time.replace(".", ","),
+            end_time=end_time.replace(".", ","),
             text=text.strip()
         )
         

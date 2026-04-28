@@ -9,7 +9,7 @@ from app.core import CONFIG
 from app.stt.models import TranscriptLine
 
 
-def transcribe(audio_path : str) -> bool:
+def transcribe(audio_path : str) -> list[TranscriptLine]:
     """
     Check if an MP4 video has embedded subtitle tracks.
     Requires FFmpeg/ffprobe installed and available in PATH.
@@ -44,16 +44,22 @@ def transcribe(audio_path : str) -> bool:
         start_time = time.monotonic()
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         end_time = time.monotonic()
-        data = json.loads(result.stdout)
+        data = []
+        for line in result.stdout.split("\n"):
+            # Look for lines that start with the timestamp
+            if not line.startswith("["):
+                continue
+            # Skip lines that are descriptions (e.g. '[music]', '[applause]')
+            if line.endswith(']'):
+                continue
+            data.append(
+                TranscriptLine.from_whisper(line.strip())
+            )
         logger.info(f"Whisper took {end_time - start_time:.2f} seconds")
-
         return data
 
     except subprocess.CalledProcessError as e:
         logger.error(f"ffprobe error: {e.stderr}")
-        return False
-    except json.JSONDecodeError:
-        logger.error("Failed to parse ffprobe output.")
         return False
     except FileNotFoundError:
         logger.error("ffprobe not found. Please ensure FFmpeg is installed and in PATH.")
