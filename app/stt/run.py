@@ -11,18 +11,17 @@ from app.stt.models import TranscriptLine
 
 def transcribe(audio_path : str) -> list[TranscriptLine]:
     """
-    Check if an MP4 video has embedded subtitle tracks.
-    Requires FFmpeg/ffprobe installed and available in PATH.
+    Transcribe an audio file using Whisper.
 
     Args:
-        video_path (str): Path to the MP4 video file.
+        audio_path (str): Path to the audio file.
     
     Returns:
-        bool: True if subtitles are present, False otherwise.
+        list[TranscriptLine]: List of transcribed lines.
     
     Usage:
-        >>> transcribe("tests/Assets/1.mp3")
-        True
+        >>> transcribe("tests/Assets/2.mp3")
+        [TranscriptLine(start=00:00:00,000, end=00:00:00,839, text="Hello world")]
     """
     logger.debug(f"Transcribing: {audio_path}")
     # Validate file path
@@ -34,8 +33,6 @@ def transcribe(audio_path : str) -> list[TranscriptLine]:
     try:
         logger.debug("Running Whisper...")
         _MODEL_FILE = pathlib.Path("tools") / CONFIG.TTS_MODEL
-        # Run ffprobe to get stream info in JSON
-        # whisperfile -m whisper-tiny.en-q5_1.bin audio.wav
         cmd = [
             "bash", "tools/whisperfile",
             "-m", str(_MODEL_FILE),
@@ -59,13 +56,13 @@ def transcribe(audio_path : str) -> list[TranscriptLine]:
         return data
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"ffprobe error: {e.stderr}")
+        logger.error(f"Whisper error: {e.stderr}")
         return False
     except FileNotFoundError:
-        logger.error("ffprobe not found. Please ensure FFmpeg is installed and in PATH.")
+        logger.error("Whisper not found. Please ensure Whisper is installed")
         return False
 
-# Example usage
+# Tests
 if __name__ == "__main__":
     import doctest
     doctest.testmod(

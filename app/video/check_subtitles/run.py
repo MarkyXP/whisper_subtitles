@@ -55,10 +55,10 @@ def has_subtitles(video_path : str) -> bool:
         logger.error("Failed to parse ffprobe output.")
         return False
     except FileNotFoundError:
-        logger.error("ffprobe not found. Please ensure FFmpeg is installed and in PATH.")
+        logger.error("ffprobe not found. Please ensure FFmpeg is installed")
         return False
 
-# Example usage
+# Testing
 if __name__ == "__main__":
     import doctest
     doctest.testmod(
