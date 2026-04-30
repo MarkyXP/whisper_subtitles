@@ -5,17 +5,17 @@ import subprocess
 from loguru import logger
 
 
-def has_subtitles(video_path : str) -> bool:
+def has_subtitles(video_path: str) -> bool:
     """
     Check if an MP4 video has embedded subtitle tracks.
     Requires FFmpeg/ffprobe installed and available in PATH.
 
     Args:
         video_path (str): Path to the MP4 video file.
-    
+
     Returns:
         bool: True if subtitles are present, False otherwise.
-    
+
     Usage:
         >>> has_subtitles("tests/Assets/3.mkv")
         True
@@ -28,17 +28,20 @@ def has_subtitles(video_path : str) -> bool:
     if not video_file.is_file():
         logger.error(f"File not found: {video_path}")
         raise FileNotFoundError(f"File not found: {video_path}")
-    #if video_file.suffix.lower() != ".mp4":
-    #    raise ValueError("Only .mp4 files are supported in this check.")
 
     try:
-        logger.debug("Running ffprobe to check for subtitle streams...")
         # Run ffprobe to get stream info in JSON
         cmd = [
-            "tools/ffprobe", "-v", "error",
-            "-select_streams", "s",  # 's' = subtitle streams
-            "-show_entries", "stream=index:stream_tags=language",
-            "-of", "json", str(video_file.absolute())
+            "tools/ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "s",  # 's' = subtitle streams
+            "-show_entries",
+            "stream=index:stream_tags=language",
+            "-of",
+            "json",
+            str(video_file.absolute()),
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         data = json.loads(result.stdout)
@@ -58,10 +61,11 @@ def has_subtitles(video_path : str) -> bool:
         logger.error("ffprobe not found. Please ensure FFmpeg is installed")
         return False
 
+
 # Testing
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod(
-        verbose=True,
-        optionflags=doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
+        verbose=True, optionflags=doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
     )
