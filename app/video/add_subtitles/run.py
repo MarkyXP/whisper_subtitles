@@ -1,12 +1,11 @@
 # ffmpeg -i input.mp4 -vf subtitles=subtitles.srt output.mp4
 
 import pathlib
+import shutil
 import subprocess
 import tempfile
 
 from loguru import logger
-
-from app.speech_to_text.models import Transcript
 
 
 def add_subtitles(video_path: str, transcript_path: str) -> None:
@@ -26,18 +25,28 @@ def add_subtitles(video_path: str, transcript_path: str) -> None:
     if not transcript_file.is_file():
         logger.error(f"File not found: {transcript_file}")
         raise FileNotFoundError(f"File not found: {transcript_path}")
-    # Use FFmpeg to add subtitles to the video
-    cmd = [
-        "tools/ffmpeg",
-        "-i",
-        video_path,
-        "-vf",
-        f"subtitles={transcript_path}",
-        video_path,
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-    logger.debug(f"FFmpeg command: {result.stdout}")
-    return True
+    with tempfile.NamedTemporaryFile(
+        suffix=".mp4", delete_on_close=False
+    ) as temp_video_file:
+        pathlib.Path(temp_video_file.name).unlink()
+        # Use FFmpeg to add subtitles to the video
+        cmd = [
+            "tools/ffmpeg",
+            "-i",
+            video_path,
+            "-f",
+            "srt",  # Format - SRT Subtitles
+            "-i",
+            transcript_path,
+            "-c",
+            "copy",  # Copies the original video and audio streams without re-encoding
+            "-c:s",
+            "mov_text",  # Converts the SRT text into the standard subtitle format
+            temp_video_file.name,
+        ]
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
+        shutil.move(temp_video_file.name, video_file)
+        logger.info(f"Subtitles added to {video_path}")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import contextlib
 import dataclasses
+import os
 import tempfile
 import textwrap
 
@@ -66,13 +67,16 @@ class Transcript:
 
     @contextlib.contextmanager
     def as_tempfile(self):
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".srt") as transcript_file:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".srt", delete_on_close=False
+        ) as transcript_file:
             transcript_file.write(str(self))
+            transcript_file.close()
             try:
                 yield transcript_file.name
             finally:
                 # Teardown
-                pass
+                os.unlink(transcript_file.name)
 
 
 if __name__ == "__main__":

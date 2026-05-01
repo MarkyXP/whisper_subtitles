@@ -36,16 +36,12 @@ def main():
             change_type = change[0]
             filepath = change[1]
             if change_type == watchfiles.Change.added:
-                loguru.logger.debug(f"Saw a file added to: {filepath}\n\t- Processing")
+                loguru.logger.info(f"File added to: {filepath}\t- Processing")
                 check_and_add_subtitles(filepath)
             elif change_type == watchfiles.Change.deleted:
-                loguru.logger.debug(
-                    f"Detected a file deleted from: {filepath}\n\t- No action required."
-                )
+                loguru.logger.debug(f"File deleted: {filepath}\t- No action required.")
             elif change_type == watchfiles.Change.modified:
-                loguru.logger.debug(
-                    f"Detected a file modified: {filepath}\n\t- No action required"
-                )
+                loguru.logger.debug(f"File modified: {filepath}\t- No action required")
 
 
 if __name__ == "__main__":
