@@ -1,6 +1,0 @@
-services:
-  subtitles:
-    image: subtitles
-    build:
-      context: .
-      dockerfile: ./Dockerfile
