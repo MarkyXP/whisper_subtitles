@@ -45,7 +45,10 @@ def transcribe(
     logger.debug("Running Whisper...")
     start_time = time.monotonic()
     model = WhisperModel(
-        CONFIG.TTS_MODEL, device="cpu", compute_type="int8", download_root="tools"
+        CONFIG.TTS_MODEL,
+        device=CONFIG.TTS_DEVICE,
+        compute_type="int8",
+        download_root="tools",
     )
     segments, _ = model.transcribe(audio_path, beam_size=5)
 

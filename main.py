@@ -70,9 +70,9 @@ def check_and_add_subtitles(video_path: str):
 async def monitor():
     """Watch configured folders for file system changes.
 
-    - **Added** - call `check_and_add_subtitles` for the new file.
+    - **Added** - Log a info message and add the file path to the queue
     - **Deleted** - Log a debug message
-    - **Modified** - Log a debug message
+    - **Modified** - Log a debug message and add the file path to the queue
 
     Returns:
         None
@@ -82,13 +82,17 @@ async def monitor():
             change_type = change[0]
             filepath = change[1]
             if change_type == watchfiles.Change.added:
-                loguru.logger.info(f"File added to: {filepath} - Added to queue")
+                loguru.logger.info(
+                    f"File added to: {filepath} - Added to processing queue"
+                )
                 await monitor_queue.put(filepath)
             elif change_type == watchfiles.Change.deleted:
                 loguru.logger.debug(f"File deleted: {filepath} - No action required.")
                 # await monitor_queue.put(filepath)
             elif change_type == watchfiles.Change.modified:
-                loguru.logger.debug(f"File modified: {filepath} - No action required")
+                loguru.logger.debug(
+                    f"File modified: {filepath} - Added to processing queue"
+                )
                 await monitor_queue.put(filepath)
 
 
