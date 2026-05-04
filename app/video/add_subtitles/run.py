@@ -42,11 +42,13 @@ def add_subtitles(video_path: str, transcript_path: str) -> None:
             "copy",  # Copies the original video and audio streams without re-encoding
             "-c:s",
             "mov_text",  # Converts the SRT text into the standard subtitle format
+            "-metadata:s:s:0",
+            'title="Whisper AI"',
             temp_video_file.name,
         ]
         subprocess.run(cmd, capture_output=True, text=True, check=True)
         shutil.move(temp_video_file.name, video_file)
-        logger.info(f"Subtitles added to {video_path}")
+        logger.debug(f"Subtitles added to {video_path}")
 
 
 if __name__ == "__main__":

@@ -26,6 +26,8 @@
 - **FFmpeg** extracts the audio, and **Faster Whisper** performs the transcription
 - **FFmpeg** soft codes the subtitle tracks, which can be displayed/hidden in your media player of choice
 
+
+## Quick start:
 ```yaml
 services:
   server:
@@ -33,21 +35,35 @@ services:
     container_name: whispersubtitles
     environment:
       - MONITORING_FOLDERS=/tv,/movies,/anime
+      - TTS_MODEL=small.en              # Optional, defaults to small.en
+      - LOGGING_LEVEL=INFO              # Optional, defaults to INFO
+      - DEEP_SCAN_ON_STARTUP=true       # Optional, defaults to true
+      - HF_TOKEN=your_huggingface_token # Optional, if you want a fast download of faster-whisper
       - TZ=Australia/Melbourne
-    volumes:                                      
+    volumes:
       - 'E:/Media/TV Shows:/tv'
       - 'E:/Media/Movies:/movies'
       - 'E:/Media/Anime:/anime'
     restart: unless-stopped
   ```
 
+### Environment Variables:
+  - MONITORING_FOLDERS: A comma-separated list of folders to monitor for new files. Default is `/monitoring`.
+  - TTS_MODEL: The TTS model to use. Default is `small.en`. See [Whisper's model page](https://github.com/openai/whisper#available-models-and-languages) for the full list of available models.
+  - LOGGING_LEVEL: The logging level. Default is `INFO`. Options are `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.
+  - DEEP_SCAN_ON_STARTUP: Whether to perform a deep scan of all files in the monitoring folders on startup. Default is `True`.
+  - HF_TOKEN: Your personal HuggingFace token. If it's not provided there will be a warning from faster-whisper that the model will download faster if the token is provided. It's only downloaded once, and shouldn't be too big of a deal.
+
 ## AI Usage
 All code, documentation, and mistakes were made by me.
 
 ## ToDo:
 - [ ] Consider adding a healh check for docker
-- [x] Fix the parsing of the monitored folders
-- [x] Log the app version on startup
-- [x] Wrap 'main' in a try/except/log/retry loop
-- [ ] Confirm that monitored updates are prioritised over the deep scan
+- [x] Confirm that monitored updates are prioritised over the deep scan
 - [ ] Move my media server away from Windows
+- [x] Have a progress bar for the file being transcribed
+- [x] Add a name to the subtitles
+- [ ] Consider adding support for remote FasterWhisper docker image and the wyoming protocol
+- [ ] Use env variable for GPU acceleration in Whisper
+- [x] Debounce as files are modified constantly (wait for them to settle) 
+

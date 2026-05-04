@@ -1706,6 +1706,7 @@ dependencies = [
     { name = "loguru" },
     { name = "pip-system-certs" },
     { name = "python-dotenv" },
+    { name = "tqdm" },
     { name = "watchfiles" },
 ]
 
@@ -1721,6 +1722,7 @@ requires-dist = [
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "pip-system-certs", specifier = ">=5.3" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
+    { name = "tqdm", specifier = ">=4.67.3" },
     { name = "watchfiles", specifier = ">=1.1.1" },
 ]
 
