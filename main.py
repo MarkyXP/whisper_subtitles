@@ -32,7 +32,7 @@ from app import speech_to_text
 from app import video
 
 # Debounce the monitor - The file is initially detected as added, then modified as the contents are written.
-monitor_queue = asyncio.Queue()
+monitor_queue = {}
 
 
 def check_and_add_subtitles(video_path: str):
@@ -81,42 +81,48 @@ async def monitor():
         for change in changes:
             change_type = change[0]
             filepath = change[1]
+            # Skip over folder changes.
+            if pathlib.Path(filepath).is_dir():
+                continue
             if change_type == watchfiles.Change.added:
-                loguru.logger.info(
-                    f"File added to: {filepath} - Added to processing queue"
-                )
-                await monitor_queue.put(filepath)
+                loguru.logger.info(f"New File: {filepath} | Added to processing queue")
+                monitor_queue[filepath] = time.monotonic()
             elif change_type == watchfiles.Change.deleted:
-                loguru.logger.debug(f"File deleted: {filepath} - No action required.")
-                # await monitor_queue.put(filepath)
+                loguru.logger.debug(f"File deleted: {filepath} | No action required.")
             elif change_type == watchfiles.Change.modified:
-                loguru.logger.debug(
+                loguru.logger.trace(
                     f"File modified: {filepath} - Added to processing queue"
                 )
-                await monitor_queue.put(filepath)
+                monitor_queue[filepath] = time.monotonic()
 
 
 async def monitor_processing():
     """
-    Process the files detected as changing by the `monitor` function.
-    Note that this implements a `debouncing` mechanism so that files that are
-    being actively downloaded (i.e. reprt being added, then constantly being
-    modified) isn't processed and subtitles are added mid-download.
+    Process the files in the queue and add subtitles.
+
+    This function performs a 'debouncing', to ensure that we don't process a
+    file that's actively being worked on by another program (e.g. being copy
+    / pasted into the monitored folder)
+
+    Note that this is used by both `deep_scan` (i.e. during initialization we
+    stumble across a file that's being downloaded / modified), and `monitor`
+    (i.e. when a new file is added to the monitored folder).
     """
     while True:
-        filepath = await monitor_queue.get()
-        await asyncio.sleep(60)
-        # If there are more changes going on with the file
-        if filepath in monitor_queue._queue:
-            # Drop the duplicates in the queue
-            monitor_queue._queue = collections.deque(set(monitor_queue._queue))
-            # Loop, get the next file in the queue, and look for ongoing changes again
-            continue
-        if not pathlib.Path(filepath).exists():
-            continue
-        # If the file hasn't changed
-        loguru.logger.info(f"Processing: {filepath}")
-        check_and_add_subtitles(filepath)
+        await asyncio.sleep(1)
+        now = time.monotonic()
+        dT = 10  # Seconds since last modification
+        for filepath in [
+            path for path in monitor_queue if monitor_queue[path] + dT < now
+        ]:
+            # Pop the filepath from the queue
+            monitor_queue.pop(filepath)
+            # If the file doesn't exist anymore, skip
+            if not pathlib.Path(filepath).exists():
+                continue
+            # If the file hasn't changed, process it
+            loguru.logger.info(f"Processing: {filepath}")
+            check_and_add_subtitles(filepath)
 
 
 async def deep_scan():
@@ -141,8 +147,11 @@ async def deep_scan():
         folderpath = await queue.get()
         # Add all files in the folder to the queue
         for entry in pathlib.Path(folderpath).iterdir():
+            path = str(entry.resolve())
             if entry.is_file():
-                check_and_add_subtitles(entry.as_posix())
+                # check_and_add_subtitles(entry.as_posix())
+                # loguru.logging.info(f"Processing: {entry.as_posix()}")
+                monitor_queue[path] = time.monotonic()
             elif entry.is_dir():
                 await queue.put(entry.as_posix())
     loguru.logger.info("Deep scan completed.")
